@@ -1,0 +1,64 @@
+---
+title: |
+     | ST588 Homework 6
+     | Matt Bray
+format: html
+code-overflow: wrap
+editor: visual
+---
+
+*First, call packages that will be used in this assignment.*
+
+```{r}
+library(tidyverse)
+```
+
+## Task 1: Conceptual Questions
+
+1.What is the purpose of the `lapply()` function? What is the equivalent `purrr` function?
+
+:   -   `lapply()` applies a vectorized function to a list. The `map()` function is the `purrr` equivalent.
+
+**2.Suppose we have a list called `my_list`. Each element of the list is a numeric data frame (all columns are numeric). We want to use `lapply()` to run the code `cor(numeric_matric, method = "kendall")` on each element of the list. Write code to do this below! (I'm really trying to ask you how you specify `method = "kendall"` when calling `lapply()`)**
+
+```{r}
+#this will create three data frames and combine them to create a list of length 3, "my_list" to test my answer.
+A <- as_tibble(rnorm(100)) |>
+  rename("a" = "value")|>
+  mutate(b = rnorm(100)) |>
+  mutate(c = rnorm(100))
+  
+B <- as_tibble(rnorm(100)) |>
+  rename("a" = "value")|>
+  mutate(b = rnorm(100)) |>
+  mutate(c = rnorm(100))
+
+C<- as_tibble(rnorm(100)) |>
+  rename("a" = "value")|>
+  mutate(b = rnorm(100)) |>
+  mutate(c = rnorm(100))
+
+A.df <- as.data.frame(A)
+B.df <- as.data.frame(B)
+C.df <- as.data.frame(C)
+
+my_list <- list(A.df, B.df, C.df)
+
+#This code applies the `cor` function to all elements of my_list.
+lapply(X=my_list, FUN=cor, method="kendall")
+
+```
+
+3.What are two advantages for using `purrr` functions instead of the `BaseR` apply family?
+
+:   -   There is more consistency between the functions' syntax
+    -   And the helper functions
+
+4.What is a side-effect function?
+
+:   -   It is a function that returns something outside of the input dataset.
+    -   For instance, `print()` would be a side-effect function, since it doesn't do anything to the original dataset.
+
+5.Why can you name a variable `sd` in a function and not cause any issues with the `sd` function?
+
+:   -   The custom function that contains `sd` has its own environment, and once the custom function is done execution, that environment ceases to exist.
