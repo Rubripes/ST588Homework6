@@ -62,3 +62,65 @@ lapply(X=my_list, FUN=cor, method="kendall")
 5.Why can you name a variable `sd` in a function and not cause any issues with the `sd` function?
 
 :   -   The custom function that contains `sd` has its own environment, and once the custom function is done execution, that environment ceases to exist.
+
+## Task 2 - Writing R Functions
+
+1.  Write a basic function (call it `getRMSE()`) tht takes in a *vector* of responses and a *vector* of predictions and outputs RMSE.
+
+RMSE:
+
+$$RMSE = \sqrt{\frac{1}{n}\sum_{i=1}^n (y_i - \hat{y}_i)^2}$$
+
+-   If a value is missing for the vector of responses (i.e. an `NA` is present), allow for additional arguments to the `mean()`function (elipses) that removes the `NA` values in the computation.
+
+*Create function `getRMSE()`:*
+
+```{r}
+getRMSE <- function(responses, predictions, ...){
+  SE <- as.numeric(map2(responses, predictions, \(x,y) (x-y)^2))
+  MSE <- mean(SE,...)
+  RMSE <- sqrt(MSE)
+  return(RMSE)
+}
+```
+
+2.  The following code will generate some response values and predictions:
+
+```{r}
+set.seed(10)
+n <- 100
+x <- runif(n)
+resp <- 3 + 10 * x + rnorm(n)
+pred <- predict(lm(resp ~ x), data.frame(x))
+```
+
+*Test `getRMSE()` function:*
+
+```{r}
+getRMSE(resp, pred)
+```
+
+*Add missing values and test `getRMSE()` function:*
+
+```{r}
+resp.1 <- resp
+resp.1[13] <- NA_real_
+resp.1[43] <- NA_real_
+resp.1
+```
+
+*Now, we'll test the behavior of the `getRMSE` function without specifying behavior to deal with missing values...*
+
+```{r}
+getRMSE(resp.1, pred)
+```
+
+*... and **with** specifying behavior to deal with missing values*
+
+```{r}
+getRMSE(resp.1, pred, na.rm=TRUE)
+```
+
+3.  Create `getMAE` function for evaluating predictions:
+
+$$MAE = \frac{1}{n}\sum_{i=1}^n |y_i - \hat{y}_i|$$
