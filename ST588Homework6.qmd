@@ -7,7 +7,6 @@ code-overflow: wrap
 editor: visual
 ---
 
-*We'll hide warnings with this code:*
 ```{r setup, include=FALSE}
 #This code prevents warnings from displaying in rendered output.
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
