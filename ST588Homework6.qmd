@@ -7,10 +7,18 @@ code-overflow: wrap
 editor: visual
 ---
 
+*We'll hide warnings with this code:*
+```{r setup, include=FALSE}
+#This code prevents warnings from displaying in rendered output.
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
 *First, call packages that will be used in this assignment.*
 
 ```{r}
 library(tidyverse)
+library(httr)
+library(jsonlite)
 ```
 
 ## Task 1: Conceptual Questions
@@ -124,3 +132,102 @@ getRMSE(resp.1, pred, na.rm=TRUE)
 3.  Create `getMAE` function for evaluating predictions:
 
 $$MAE = \frac{1}{n}\sum_{i=1}^n |y_i - \hat{y}_i|$$
+
+```{r}
+getMAE <- function(responses, predictions, ...){
+  AE <- as.numeric(map2(responses, predictions, \(x,y) abs(x-y)))
+  MAE <- mean(AE,...)
+  return(MAE)
+}
+```
+
+*We'll test the `getMAE` function behavior without `na.rm`...*
+```{r}
+getMAE(resp.1, pred)
+```
+*...And then we'll test the `getMAE` function with the `na.rm` function:*
+```{r}
+getMAE(resp.1, pred, na.rm=TRUE)
+```
+*Here, we'll create a wrapper function that implements both `getRMSE` and `getMAE`.*
+```{r}
+evalPred <- function(responses, predictions, RMSE=TRUE, MAE=TRUE, ...){
+  
+  if(!is.numeric(responses)|!is.numeric(predictions)){
+    stop("Input should be numeric (atomic) vector")
+  } else if(!is.atomic(responses)|!is.atomic(predictions)){
+    stop("Needs to be simpler data")
+  } else if(!is.vector(responses)|!is.vector(predictions)){
+    stop("this is not the vector you are looking for")
+  }
+  
+  
+  if(RMSE==TRUE){ 
+    RMSE <- getRMSE(responses, predictions, ...)
+  } else {
+    RMSE <- as.numeric(NA)
+  }
+  
+  if(MAE==TRUE){
+    MAE <- getMAE(responses, predictions, ...)
+  } else {
+    MAE <- as.numeric(NA)
+  }
+  
+  #output <- (RMSE, MAE)
+  outRMSE <-as_tibble(RMSE) |>
+    rename("RMSE"="value")
+  
+  outMAE <-as_tibble(MAE) |>
+    rename("MAE" = "value")
+  
+  out <-merge(outRMSE, outMAE)
+  
+return(out)
+}
+```
+
+
+Here, we'll test `evalPred` across multiple scenarios:
+
+*First, we'll look at `RMSE` only:
+```{r}
+evalPred(resp, pred, MAE=FALSE)
+```
+Then, we'll look at `MAE` only:
+```{r}
+evalPred(resp, pred, RMSE=FALSE)
+```
+Then...both metrics:
+```{r}
+evalPred(resp, pred)
+```
+
+Test with missing data:
+```{r}
+evalPred(resp.1, pred, na.rm=TRUE)
+```
+
+Test with incorrect inputs:
+```{r}
+#try() allows for evalution and demonstrates error without stopping entire document render.
+try(evalPred(resp, A.df))
+```
+
+
+## Task 3: Querying an API and a Tidy-Style Function
+
+1. Use `GET()` from the `httr` package to return information about a topic that you are interested in that has been in the news lately, and store as R object.
+```{r}
+URL_ids<- "https://newsapi.org/v2/everything?q=spacex&apiKey=2a263eef22a94f42ab1bbd0802661e28"
+
+id_info <- httr::GET(URL_ids)
+str(id_info, max.level=1)
+
+parsed <- fromJSON(rawToChar(id_info$content))
+spacex_info <- as_tibble(parsed$articles)
+spacex_info
+x <- pluck(spacex_info)
+x
+```
+
